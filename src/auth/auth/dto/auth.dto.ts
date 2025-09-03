@@ -45,7 +45,7 @@ export class SigninDto {
   password: string;
 }
 
-export class ResetPasswordDto {
+export class ChangePasswordDto {
   @IsStrongPassword()
   @IsNotEmpty()
   lastPassword: string;
@@ -53,6 +53,17 @@ export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty()
   oldPassword: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsStrongPassword()
+  newPassword: string;
 }
 
 export class ForgotPasswordDto {
