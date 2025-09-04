@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthModule } from './auth/auth/auth.module';
-import { PrismaModule } from './prisma/prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { UserModule } from './user/user/user.module';
 import { S3Module } from 'nestjs-s3';
+import { UserModule } from './user/user.module';
+import { MedicalentryModule } from './medicalentry/medicalentry.module';
 
 @Module({
   imports: [
@@ -37,8 +36,7 @@ import { S3Module } from 'nestjs-s3';
       },
     }),
     UserModule,
+    MedicalentryModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

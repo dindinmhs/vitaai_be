@@ -4,7 +4,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateProfileDto } from './dto';
 import { v4 as uuid } from 'uuid';
 

@@ -9,8 +9,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { GetUser } from 'src/auth/auth/decorator';
-import { JwtGuard } from 'src/auth/auth/guard';
+import { GetUser } from 'src/auth/decorator';
+import { JwtGuard } from 'src/auth/guard';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateProfileDto } from './dto';

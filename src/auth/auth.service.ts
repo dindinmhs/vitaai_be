@@ -13,7 +13,7 @@ import {
   SignupDto,
 } from './dto';
 import * as argon from 'argon2';
-import { PrismaService } from 'src/prisma/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -60,7 +60,7 @@ export class AuthService {
           <p>Halo ${user.name},</p>
           <p>Terima kasih telah mendaftar. Silakan klik tombol di bawah untuk memverifikasi email Anda:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
+            <a href="${verificationUrl}" taget="_blank" 
                style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
               Verifikasi Email
             </a>
@@ -135,7 +135,7 @@ export class AuthService {
       expiresIn: expire,
     });
 
-    return { accessToken, userId, email, userRole };
+    return { accessToken, userRole };
   }
 
   async verifyEmail(token: string) {
