@@ -6,6 +6,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { S3Module } from 'nestjs-s3';
 import { UserModule } from './user/user.module';
 import { MedicalentryModule } from './medicalentry/medicalentry.module';
+import { GoogleaiModule } from './googleai/googleai.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { MedicalentryModule } from './medicalentry/medicalentry.module';
     }),
     UserModule,
     MedicalentryModule,
+    GoogleaiModule,
+    ChatModule,
   ],
 })
 export class AppModule {}
