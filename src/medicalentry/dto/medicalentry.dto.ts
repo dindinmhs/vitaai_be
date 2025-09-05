@@ -56,3 +56,28 @@ export class ChatDto {
   @Max(2)
   temperature?: number = 0.5;
 }
+
+export class CreateEntryDto {
+  @IsString()
+  title: string;
+
+  @IsString()
+  content: string;
+
+  @IsString()
+  sourceUrl: string;
+}
+
+export class UpdateEntryDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  @IsOptional()
+  @IsString()
+  sourceUrl?: string;
+}

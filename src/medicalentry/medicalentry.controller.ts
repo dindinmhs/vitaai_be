@@ -3,12 +3,21 @@ import {
   Controller,
   Post,
   Get,
+  Put,
+  Delete,
   Query,
+  Param,
   HttpStatus,
   Res,
 } from '@nestjs/common';
 import { MedicalentryService } from './medicalentry.service';
-import { ScrapDto, PromptDto, ChatDto } from './dto';
+import {
+  ScrapDto,
+  PromptDto,
+  ChatDto,
+  CreateEntryDto,
+  UpdateEntryDto,
+} from './dto';
 import { Response } from 'express';
 
 @Controller('medicalentry')
@@ -18,6 +27,26 @@ export class MedicalentryController {
   @Post('scrape')
   async scrapeWebsite(@Body() dto: ScrapDto) {
     return this.medicalentryService.scrapeWebsite(dto);
+  }
+
+  @Post()
+  async createEntry(@Body() dto: CreateEntryDto) {
+    return this.medicalentryService.createEntry(dto);
+  }
+
+  @Get(':id')
+  async getEntryById(@Param('id') id: string) {
+    return this.medicalentryService.getEntryById(id);
+  }
+
+  @Put(':id')
+  async updateEntry(@Param('id') id: string, @Body() dto: UpdateEntryDto) {
+    return this.medicalentryService.updateEntry(id, dto);
+  }
+
+  @Delete(':id')
+  async deleteEntry(@Param('id') id: string) {
+    return this.medicalentryService.deleteEntry(id);
   }
 
   @Post('prompt')

@@ -1,9 +1,15 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleGenAI } from '@google/genai';
 import { randomUUID } from 'crypto';
+import { CreateEntryDto, UpdateEntryDto } from './dto';
 
 @Injectable()
 export class MedicalentryService {
@@ -35,23 +41,46 @@ export class MedicalentryService {
       const mainText = $('.main').text().trim();
       const title = $('.page-title').text().trim();
 
+      return {
+        title,
+        content: mainText,
+        sourceUrl: dto.url,
+        message: 'Website scraped successfully',
+      };
+    } catch (error: any) {
+      throw new HttpException(
+        `Scraping failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async createEntry(dto: CreateEntryDto) {
+    try {
       // Generate embedding
-      const embedding = await this.generateEmbedding(mainText);
+      const embedding = await this.generateEmbedding(dto.content);
 
       // Save to DB using raw SQL with RETURNING
       const id = randomUUID();
       const inserted = await this.prisma.$queryRawUnsafe<
-        { id: string; title: string; content: string; sourceUrl: string }[]
+        {
+          id: string;
+          title: string;
+          content: string;
+          sourceUrl: string;
+          createdAt: Date;
+          updatedAt: Date;
+        }[]
       >(
         `
-        INSERT INTO "MedicalEntry" (id, title, content, "sourceUrl", embedding)
-        VALUES ($1, $2, $3, $4, $5::vector)
-        RETURNING id, title, content, "sourceUrl"
+        INSERT INTO "MedicalEntry" (id, title, content, "sourceUrl", embedding, "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5::vector, NOW(), NOW())
+        RETURNING id, title, content, "sourceUrl", "createdAt", "updatedAt"
         `,
         id,
-        title,
-        mainText,
-        dto.url,
+        dto.title,
+        dto.content,
+        dto.sourceUrl,
         `[${embedding.join(',')}]`,
       );
 
@@ -59,11 +88,143 @@ export class MedicalentryService {
 
       return {
         ...medicalEntry,
-        message: 'Medical entry saved successfully',
+        message: 'Medical entry created successfully',
       };
     } catch (error: any) {
       throw new HttpException(
-        `Scraping failed: ${error.message}`,
+        `Create entry failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getEntryById(id: string) {
+    try {
+      const entry = await this.prisma.medicalEntry.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          sourceUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (!entry) {
+        throw new NotFoundException(`Medical entry with ID ${id} not found`);
+      }
+
+      return entry;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new HttpException(
+        `Get entry failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateEntry(id: string, dto: UpdateEntryDto) {
+    try {
+      // Check if entry exists
+      const existingEntry = await this.prisma.medicalEntry.findUnique({
+        where: { id },
+      });
+
+      if (!existingEntry) {
+        throw new NotFoundException(`Medical entry with ID ${id} not found`);
+      }
+
+      // Prepare update data
+      const updateData: any = {
+        updatedAt: new Date(),
+      };
+
+      if (dto.title !== undefined) {
+        updateData.title = dto.title;
+      }
+      if (dto.sourceUrl !== undefined) {
+        updateData.sourceUrl = dto.sourceUrl;
+      }
+      if (dto.content !== undefined) {
+        updateData.content = dto.content;
+        // Re-generate embedding if content is updated
+        const embedding = await this.generateEmbedding(dto.content);
+        updateData.embedding = `[${embedding.join(',')}]`;
+      }
+
+      // Update using raw SQL for embedding
+      const updated = await this.prisma.$queryRawUnsafe<
+        {
+          id: string;
+          title: string;
+          content: string;
+          sourceUrl: string;
+          createdAt: Date;
+          updatedAt: Date;
+        }[]
+      >(
+        `
+        UPDATE "MedicalEntry" 
+        SET title = COALESCE($2, title),
+            content = COALESCE($3, content),
+            "sourceUrl" = COALESCE($4, "sourceUrl"),
+            embedding = COALESCE($5::vector, embedding),
+            "updatedAt" = NOW()
+        WHERE id = $1
+        RETURNING id, title, content, "sourceUrl", "createdAt", "updatedAt"
+        `,
+        id,
+        dto.title || null,
+        dto.content || null,
+        dto.sourceUrl || null,
+        updateData.embedding || null,
+      );
+
+      if (updated.length === 0) {
+        throw new NotFoundException(`Medical entry with ID ${id} not found`);
+      }
+
+      return {
+        ...updated[0],
+        message: 'Medical entry updated successfully',
+      };
+    } catch (error: any) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new HttpException(
+        `Update entry failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteEntry(id: string) {
+    try {
+      const deleted = await this.prisma.medicalEntry.delete({
+        where: { id },
+        select: {
+          id: true,
+          title: true,
+        },
+      });
+
+      return {
+        id: deleted.id,
+        title: deleted.title,
+        message: 'Medical entry deleted successfully',
+      };
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Medical entry with ID ${id} not found`);
+      }
+      throw new HttpException(
+        `Delete entry failed: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
