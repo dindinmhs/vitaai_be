@@ -200,6 +200,137 @@ Instructions:
     }
   }
 
+  async chat(
+    question: string,
+    limit: number = 3,
+    similarityThreshold: number = 0.6,
+    temperature: number = 0.5,
+  ) {
+    try {
+      // First, get the enhanced prompt using RAG
+      const promptResult = await this.processPrompt(
+        question,
+        limit,
+        similarityThreshold,
+      );
+
+      // If no relevant information found, return the message
+      if (!promptResult.enhancedPrompt) {
+        return {
+          response: promptResult.message,
+          ragResults: promptResult.ragResults,
+          streaming: false,
+        };
+      }
+
+      // Configure the model
+      const config = {
+        temperature,
+      };
+      const model = 'gemma-3-12b-it';
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: promptResult.enhancedPrompt,
+            },
+          ],
+        },
+      ];
+
+      // Generate response using streaming
+      const response = await this.genAI.models.generateContentStream({
+        model,
+        config,
+        contents,
+      });
+
+      // Collect all chunks
+      let fullResponse = '';
+      for await (const chunk of response) {
+        if (chunk.text) {
+          fullResponse += chunk.text;
+        }
+      }
+
+      return {
+        response: fullResponse,
+        ragResults: promptResult.ragResults,
+        threshold: similarityThreshold,
+        totalResults: promptResult.totalResults,
+        temperature,
+        streaming: false,
+      };
+    } catch (error: any) {
+      throw new HttpException(
+        `Chat processing failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async chatStream(
+    question: string,
+    limit: number = 3,
+    similarityThreshold: number = 0.6,
+    temperature: number = 0.5,
+  ) {
+    try {
+      // First, get the enhanced prompt using RAG
+      const promptResult = await this.processPrompt(
+        question,
+        limit,
+        similarityThreshold,
+      );
+
+      // If no relevant information found, return the message
+      if (!promptResult.enhancedPrompt) {
+        return {
+          stream: null,
+          message: promptResult.message,
+          ragResults: promptResult.ragResults,
+        };
+      }
+
+      // Configure the model
+      const config = {
+        temperature,
+      };
+      const model = 'gemma-3-12b-it';
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: promptResult.enhancedPrompt,
+            },
+          ],
+        },
+      ];
+
+      // Generate response using streaming
+      const response = await this.genAI.models.generateContentStream({
+        model,
+        config,
+        contents,
+      });
+
+      return {
+        stream: response,
+        ragResults: promptResult.ragResults,
+        threshold: similarityThreshold,
+        totalResults: promptResult.totalResults,
+        temperature,
+      };
+    } catch (error: any) {
+      throw new HttpException(
+        `Chat streaming failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async getAllEntries() {
     return this.prisma.medicalEntry.findMany({
       select: {
