@@ -10,7 +10,7 @@ import { JwtStrategy } from './strategy';
       secret: process.env.JWT_SECRET,
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

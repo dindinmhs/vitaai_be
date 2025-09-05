@@ -7,5 +7,6 @@ import { MedicalentryModule } from 'src/medicalentry/medicalentry.module';
   imports: [MedicalentryModule],
   providers: [ChatService],
   controllers: [ChatController],
+  exports: [ChatService],
 })
 export class ChatModule {}

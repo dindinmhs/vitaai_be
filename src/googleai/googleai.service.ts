@@ -35,9 +35,14 @@ export class GoogleaiService {
     prompt: string,
     temperature: number = 0.5,
     model: string = 'gemma-3-12b-it',
+    maxOutputTokens?: number,
   ) {
     try {
-      const config = { temperature };
+      const config: any = { temperature };
+      if (maxOutputTokens) {
+        config.maxOutputTokens = maxOutputTokens;
+      }
+
       const contents = [
         {
           role: 'user',
@@ -64,9 +69,14 @@ export class GoogleaiService {
     prompt: string,
     temperature: number = 0.5,
     model: string = 'gemma-3-12b-it',
+    maxOutputTokens?: number,
   ) {
     try {
-      const config = { temperature };
+      const config: any = { temperature };
+      if (maxOutputTokens) {
+        config.maxOutputTokens = maxOutputTokens;
+      }
+
       const contents = [
         {
           role: 'user',

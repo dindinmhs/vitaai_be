@@ -8,15 +8,17 @@ import { UserModule } from './user/user.module';
 import { MedicalentryModule } from './medicalentry/medicalentry.module';
 import { GoogleaiModule } from './googleai/googleai.module';
 import { ChatModule } from './chat/chat.module';
+import { ConversationModule } from './conversation/conversation.module';
 
 @Module({
   imports: [
-    AuthModule,
-    PrismaModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
     }),
+    GoogleaiModule,
+    AuthModule,
+    PrismaModule,
     MailerModule.forRoot({
       transport: {
         host: process.env.EMAIL_HOST,
@@ -39,8 +41,8 @@ import { ChatModule } from './chat/chat.module';
     }),
     UserModule,
     MedicalentryModule,
-    GoogleaiModule,
     ChatModule,
+    ConversationModule,
   ],
 })
 export class AppModule {}
